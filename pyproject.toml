@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "bap1b"
+version = "0.1.0"
+description = ""
+authors = ["RDoerfel <doerfelruben@aol.com>"]
+readme = "README.md"
+packages = [{ include = "bap1b" }]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+ipykernel = "^6.29.5"
+matplotlib = "3.7.1"
+nibabel = "3.2.2"
+numpy = "1.23.5"
+pandas = "1.5.3"
+pybids = "0.15.6"
+scikit-learn = "1.2.2"
+scipy = "1.10.1"
+seaborn = "0.12.2"
+statsmodels = "0.14.0"
+bids-validator = "1.11.0"
+clinica = "0.7.4"
+pytest = "^8.3.2"
+click = "^8.1.7"
+mdutils = "^1.6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

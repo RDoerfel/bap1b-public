@@ -1,0 +1,14 @@
+ipykernel
+matplotlib==3.7.1
+nibabel==3.2.2
+numpy==1.23.5
+pandas==1.5.3
+pybids==0.15.6
+scikit-learn==1.2.2
+scipy==1.10.1
+seaborn==0.12.2
+statsmodels==0.14.0
+bids-validator==1.11.0
+clinica==0.7.4
+pytest
+click

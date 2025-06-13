@@ -1,0 +1,17 @@
+# directories
+*.egg-info
+data/
+docs/
+**/__pycache__/
+.vscode/
+.Rproj.user
+renv/
+.venv/
+.github/
+.pytest_cache/
+results/
+# files
+.RData
+.Rhistory
+.Rprofile
+poetry.lock
