@@ -17,7 +17,7 @@ This repository contains code for validating multiple publicly available brain-a
   - `vis_*.py`: Scripts for generating figures
 definitions
 - `data/`: Data storage (not included in repository)
-  - `megamastersheet.xlsx`: Main data file
+  - `megamastersheet_simulated.xlsx`: Main data file
   - `stats/`: Derived statistical data
 - `results/`: Output figures and tables (not included in repository)
 
@@ -89,7 +89,7 @@ This project uses the ADNI dataset, which is not included in this repository due
 
 1. Request access to the ADNI dataset: [ADNI Data Access](http://adni.loni.usc.edu/)
 2. Process the data according to the methods described in our paper
-3. Create a `megamastersheet.xlsx` file in the `data/` directory with the required structure
+3. Create a `megamastersheet_simulated.xlsx` file in the `data/` directory with the required structure. To run all scripts, we provide an example sheet that provides all necessary files with the required structure. Please note, the values are random samples drawn from distirbutions that match the original data, but this is not the data used for the publications. We were not allowed to publish the original data. The script `00_randomize_data.py` provides and example on how the randomization took place.
 
 ## Results
 

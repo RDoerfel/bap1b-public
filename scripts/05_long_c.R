@@ -45,7 +45,7 @@ predict_and_ci95 <- function(vec_coeffs, vcov, vec_values) {
 ### Script
 
 # Load excel file
-file_path <- here::here("data", "megamastersheet.xlsx")
+file_path <- here::here("data", "megamastersheet_simulated.xlsx")
 data <- readxl::read_excel(file_path)
 print(dim(data))
 # [1] 10802    36
