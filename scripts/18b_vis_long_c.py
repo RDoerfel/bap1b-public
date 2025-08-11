@@ -86,7 +86,7 @@ for i, model in enumerate(models):
 
     ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
     # ax.set_xlim(xlim)
-    ax.set_ylim((0, 1.1))
+    ax.set_ylim((0, 1.0))
     ax.set_title(title)
 
 fig.set_style(spinewidth=0.9)
