@@ -45,15 +45,15 @@ predict_and_ci95 <- function(vec_coeffs, vcov, vec_values) {
 ### Script
 
 # Load excel file
-file_path <- here::here("data", "megamastersheet_simulated.xlsx")
+file_path <- here::here("data", "megamastersheet.xlsx")
 data <- readxl::read_excel(file_path)
 print(dim(data))
-# [1] 10802    36
+# [1] 10802    42
 
 # only take data that is indicated by column keep
 data_keep <- data[data$keep == 1, ]
 print(dim(data_keep))
-# [1] 9768   36
+# [1] 9768   42
 
 # Convert categorical variables to factors
 data_keep <- data_keep %>%
@@ -79,7 +79,8 @@ data_subset <- data_keep %>% dplyr::select(
     gm_icv,
     starts_with("pad_"),
     chron_age,
-    time_from_baseline
+    time_from_baseline,
+    hippocampus_icv
 )
 
 # only until 4 years
@@ -100,12 +101,12 @@ print(na_counts)
 data_subset <- data_subset %>%
     dplyr::arrange(subject_id, time_from_baseline) %>%
     dplyr::group_by(subject_id) %>%
-    dplyr::filter(dplyr::first(diagnosis) == "CN") %>%
+    dplyr::filter(dplyr::first(session_id) == "M000" & dplyr::first(diagnosis) == "CN") %>%
     dplyr::ungroup()
 
 print("Number of scans after filtering for CN at baseline:")
 print(dim(data_subset))
-# [1] 2637   15
+# [1] 2600   15
 
 # Get baseline values
 data_subset_base <- data_subset %>%
@@ -137,16 +138,16 @@ data_subset_base_survive <- data_subset_base %>%
 
 print("Number of scans entering the analysis")
 print(dim(data_subset_base_survive))
-# [1] 875  29
+# [1] 861  28
 
 # compute "prevelance" and number of subjects with change
 print("Prevelance of change from CN to MCI/AD")
 print(mean(data_subset_base_survive$diagnosis_change))
-# [1] 0.07428571
+# [1] 0.07433217
 
 print("Number of subjects with change from CN to MCI/AD")
 print(sum(data_subset_base_survive$diagnosis_change))
-# [1] 65
+# [1] 64
 
 # if it is the last entry and change did not occur yet, set time to shortly after visit
 data_subset_base_survive_timing <- data_subset_base_survive %>%
