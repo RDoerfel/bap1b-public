@@ -30,6 +30,7 @@ df = df[
         "icv",
         "gm_icv",
         "aes",
+        "hippocampus_icv",
     ]
 ]
 # %%
@@ -46,6 +47,7 @@ for col in [
     "icv",
     "gm_icv",
     "aes",
+    "hippocampus_icv",
 ]:
     mean = df[col].mean()
     std = df[col].std()
