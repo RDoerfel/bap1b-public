@@ -137,7 +137,7 @@ strategy_3 <- function(data, contrast) {
 ### Script
 
 # Load excel file
-file_path <- here::here("data", "megamastersheet_simulated.xlsx")
+file_path <- here::here("data", "megamastersheet.xlsx")
 data <- readxl::read_excel(file_path)
 print(dim(data))
 # [1] 10802    36
@@ -172,7 +172,8 @@ data_subset <- data_keep %>% dplyr::select(
     gm_icv,
     chron_age,
     time_from_baseline,
-    ADNI_MEM
+    ADNI_MEM,
+    hippocampus_icv
 )
 
 
@@ -249,11 +250,12 @@ for (diag in c("CN", "MCI", "AD")) {
                           gender,
                           gm_icv,
                           ADNI_MEM,
-                          gm_icv = gm_icv)
+                          gm_icv = gm_icv,
+                          hippocampus_icv)
 
         # iterate through target variables ADNI_MEM and gm_icv
         results_target <- list()
-        targets <- c("ADNI_MEM", "gm_icv")
+        targets <- c("ADNI_MEM", "gm_icv", "hippocampus_icv")
         for (target in targets) {
             message(sprintf("Diagnosis %s, model %s, target %s", diag, dvs[i], target))
             # if both dvs[i] and target is gm_icv set results to 1
