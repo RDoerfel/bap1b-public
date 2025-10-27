@@ -37,8 +37,8 @@ df["Model"] = df["Model"].str.replace("gm_icv", "GM/ICV")
 df.rename(columns={"group": "Group"}, inplace=True)
 
 # only take type == model+edu
-df_edu = df[df["type"] == "model+edu"]
-df_suppl = df[df["type"] == "model"]
+df_edu_suppl = df[df["type"] == "model+edu"]
+df = df[df["type"] == "model"]
 
 
 def pivot_table(df, index, columns, values):
@@ -59,7 +59,7 @@ def sort_columns(df, columns):
 
 
 def arrange_table(df):
-    df_pivot_edu = pivot_table(
+    df_pivot_edu_suppl = pivot_table(
         df,
         "Model",
         "Group",
@@ -70,29 +70,40 @@ def arrange_table(df):
             "PCC p-value",
         ],
     )
-    df_pivot_edu = sort_rows(
-        df_pivot_edu, ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "GM/ICV"]
+    df_pivot_edu_suppl = sort_rows(
+        df_pivot_edu_suppl, ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "GM/ICV"]
     )
-    df_pivot_edu = sort_columns(df_pivot_edu, ["CN", "MCI", "AD"])
-    return df_pivot_edu
+    df_pivot_edu_suppl = sort_columns(df_pivot_edu_suppl, ["CN", "MCI", "AD"])
+    return df_pivot_edu_suppl
 
 
-df_arranged_edu = arrange_table(df_edu)
-df_arranged_suppl = arrange_table(df_suppl)
+df_arranged_edu_suppl = arrange_table(df_edu_suppl)
+df_arranged = arrange_table(df)
 
-# %% drop Beta (SE) for article table
-df_arranged_edu_beta = df_arranged_edu.drop(
+# %% drop Beta (SE)
+df_arranged_edu_suppl_beta = df_arranged_edu_suppl.drop(
     columns=[
         "PCC (95%CI)",
         "PCC p-value",
     ],
     level=1,
 )
-df_arranged_edu_pcc = df_arranged_edu.drop(columns=["Beta (SE)", "p-value"], level=1)
+df_arranged_edu_suppl_pcc = df_arranged_edu_suppl.drop(columns=["Beta (SE)", "p-value"], level=1)
 
+# %% drop Beta (SE) for main table
+df_arranged_beta = df_arranged.drop(
+    columns=[
+        "PCC (95%CI)",
+        "PCC p-value",
+    ],
+    level=1,
+)
+
+df_arranged_pcc = df_arranged.drop(columns=["Beta (SE)", "p-value"], level=1)
 # %% save table
-df_arranged_edu_beta.to_excel(results_dir / "cs_b_results_formatted_beta_suppl.xlsx", index=True)
-df_arranged_edu_pcc.to_excel(results_dir / "cs_b_results_formatted.xlsx", index=True)
-df_arranged_suppl.to_excel(results_dir / "cs_b_results_formatted_suppl.xlsx", index=True)
+df_arranged_edu_suppl_beta.to_excel(results_dir / "cs_b_results_formatted_edu_suppl_beta.xlsx", index=True)
+df_arranged_edu_suppl_pcc.to_excel(results_dir / "cs_b_results_formatted_edu_suppl_pcc.xlsx", index=True)
+df_arranged_beta.to_excel(results_dir / "cs_b_results_formatted_beta.xlsx", index=True)
+df_arranged_pcc.to_excel(results_dir / "cs_b_results_formatted_pcc.xlsx", index=True)
 
 # %%
