@@ -4,6 +4,8 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
+import pingouin as pg
+import numpy as _np
 
 import bap1b.figures as figures
 
@@ -44,11 +46,33 @@ def compute_correlations(data, models):
     return df_results
 
 
-df_results = compute_correlations(df, pad_models_gm_icv)
+def compute_partial_correlations(data, models):
+    df_results = pd.DataFrame(index=models, columns=models)
+    for model1 in models:
+        for model2 in models:
+            if model1 == model2:
+                df_results.loc[model1, model2] = "1.0\n(1.0, 1.0)"
+                continue
+            # create dummy variables for diagnosis using pandas and keep as covariates list
+            data = data.copy()
+            diag_dummies = pd.get_dummies(data["diagnosis"], prefix="diagnosis", drop_first=True)
+            data_dummy = pd.concat([data, diag_dummies], axis=1)
+            covars = list(diag_dummies.columns)
+            data_subset = data_dummy[[model1, model2] + covars]
+            pcorr = pg.partial_corr(data=data_subset, x=model1, y=model2, covar=covars, method="pearson")
+            corr = round(pcorr["r"].values[0], 2)
+            ci_lower = round(pcorr["CI95%"][0][0], 2)
+            ci_upper = round(pcorr["CI95%"][0][1], 2)
+            df_results.loc[model1, model2] = f"{corr}\n({ci_lower}, {ci_upper})"
+    return df_results
+
+
+df_corrs = compute_correlations(df, pad_models_gm_icv)
+df_partial_corrs = compute_partial_correlations(df, pad_models_gm_icv)
 
 
 # %%
-def custom_pairplot(data, outcome_columns, figsize=(10, 10), cmap="coolwarm"):
+def custom_pairplot(data, outcome_columns, figsize=(10, 10), cmap="coolwarm", partial=False):
     """
     Create a custom pairplot with correlation heatmaps in lower triangle
     and scatter plots in upper triangle.
@@ -67,9 +91,25 @@ def custom_pairplot(data, outcome_columns, figsize=(10, 10), cmap="coolwarm"):
     matplotlib.figure.Figure
         The created pairplot figure
     """
+    # colors:
+    ki_color_names = ["Plum", "Orange", "Blue", "Black", "Green", "Yellow"]
+    ki_colors_dark = ["#4F0433", "#B84145", "#002C34", "#000000", "#094334", "#F59A00"]
+    ki_colors_normal = ["#870052", "#FF876F", "#4DB5BC", "#666666", "#54B986", "#FFC66D"]
+    ki_colors_light = ["#EDDBE4", "#FFDDD6", "#CCEBED", "#F1F1F1", "#C7ECDC", "#FFE7C2"]
+
+    # convert to color palettes
+    ki_palette_dark = sns.color_palette(ki_colors_dark)
+    ki_palette_normal = sns.color_palette(ki_colors_normal)
+    ki_palette_light = sns.color_palette(ki_colors_light)
+
+    color_dict_lines = {"CN": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
+    color_dict_shade = {"CN": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
+
     # Compute correlation matrix
-    corr_matrix = data[outcome_columns].corr()
-    corr_labels = compute_correlations(data, outcome_columns)
+    if partial:
+        corr_labels = compute_partial_correlations(data, outcome_columns)
+    else:
+        corr_labels = compute_correlations(data, outcome_columns)
 
     # Determine number of columns
     n = len(outcome_columns)
@@ -83,29 +123,32 @@ def custom_pairplot(data, outcome_columns, figsize=(10, 10), cmap="coolwarm"):
     # Create figure and axes
     fig, axes = plt.subplots(n, n, figsize=figsize)
 
+    # ensure axes is 2D (handles n==1)
+    axes = _np.atleast_2d(axes)
+
     # Iterate through all subplot combinations
     for i in range(n):
         for j in range(n):
             ax = axes[i, j]
 
-            # Diagonal: show column names
+            # remove ticks
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+            # Diagonal: histogram
             if i == j:
-                # histplot using plt.hist to avoid labels
-                ax.hist(data[outcome_columns[i]], bins=30, color="tab:blue", alpha=0.9)
-
-                # remove left, top and right spines
+                for diag in ["CN", "MCI", "AD"]:
+                    data_diag = data[data["diagnosis"] == diag]
+                    ax.hist(data_diag[outcome_columns[i]].dropna(), bins=30, color=color_dict_lines[diag], alpha=0.7)
                 ax.spines[["left", "top", "right"]].set_visible(False)
-                ax.set_yticks([0])
+                ax.set_yticks([])
 
-            # Lower triangle: correlation heatmap
-            elif i > j:
-                ax.scatter(data[outcome_columns[j]], data[outcome_columns[i]], alpha=0.9, s=0.05, color="tab:blue")
-
-            # Upper triangle: scatter plot
+            # upper triangle: correlation heatmap (i < j)
             elif i < j:
-                # get text from corr_labels
+                text = corr_labels.iloc[i, j]
+                corr = float(text.split("\n")[0])
                 sns.heatmap(
-                    [[corr_matrix.iloc[i, j]]],
+                    [[corr]],
                     ax=ax,
                     cbar=False,
                     cmap=cmap,
@@ -115,14 +158,83 @@ def custom_pairplot(data, outcome_columns, figsize=(10, 10), cmap="coolwarm"):
                 ax.axis("off")
 
                 # add text to heatmap
-                text = corr_labels.iloc[i, j]
+
                 ax.text(0.5, 0.5, text, ha="center", va="center", fontsize=8, color="black")
 
-            if i == (n - 1):
-                ax.set_xlabel(column_names[j], rotation=0)
+                # # Forest plot showing r and 95% CI for each diagnosis for this pair
+                # diags = ["CN", "MCI", "AD"]
+                # ys = _np.arange(len(diags))  # 0,1,2 -> will label as CN,MCI,AD
+                # rs = []
+                # ci_lowers = []
+                # ci_uppers = []
 
+                # xcol = outcome_columns[j]
+                # ycol = outcome_columns[i]
+
+                # for diag in diags:
+                #     data_diag = data[data["diagnosis"] == diag]
+                #     try:
+                #         res = pearsonr(data_diag[xcol], data_diag[ycol])
+                #         r = res.statistic
+                #         ci_lo, ci_hi = res.confidence_interval()
+                #         rs.append(r)
+                #         ci_lowers.append(ci_lo)
+                #         ci_uppers.append(ci_hi)
+                #     except Exception:
+                #         rs.append(_np.nan)
+                #         ci_lowers.append(_np.nan)
+                #         ci_uppers.append(_np.nan)
+
+                # # Plot horizontal lines for CIs and points for r
+                # for idx, diag in enumerate(diags):
+                #     r = rs[idx]
+                #     lo = ci_lowers[idx]
+                #     hi = ci_uppers[idx]
+                #     if _np.isfinite(r) and _np.isfinite(lo) and _np.isfinite(hi):
+                #         color = color_dict_lines[diag]
+                #         # horizontal CI line
+                #         ax.hlines(ys[idx], lo, hi, color=color, linewidth=0.9)
+                #         # central point
+                #         ax.plot(r, ys[idx], "o", color=color, markersize=0.9)
+
+                # format axes
+                # Default x/y limits and ticks; for the last column use -1..0 with ticks -1 and 0
+                if j == (n - 1):
+                    ax.set_xticks([-0.2, 0, 0.2])
+                    ax.set_xticklabels(["-0.2", "0", "0.2"], fontsize=5)
+                else:
+                    ax.set_xticks([0.2, 0.5, 0.8])
+                    ax.set_xticklabels(["0.2", "0.5", "0.8"], fontsize=5)
+
+                # ax.set_ylim(-0.5, len(diags) - 0.5)
+                # ax.set_yticks(ys)
+                # ax.spines[["top", "right"]].set_visible(False)
+
+                if j == i + 1:
+                    # ax.set_yticklabels(diags, rotation=0, fontsize=5)
+                    continue
+                else:
+                    ax.set_yticklabels([])
+                    ax.set_xticklabels([])
+
+            # Lower triangle: scatter plot (i < j)
+            else:
+                for diag in ["CN", "MCI", "AD"]:
+                    data_diag = data[data["diagnosis"] == diag]
+                    ax.scatter(
+                        data_diag[outcome_columns[j]],
+                        data_diag[outcome_columns[i]],
+                        alpha=0.6,
+                        s=2,
+                        color=color_dict_lines[diag],
+                    )
+                ax.spines[["top", "right"]].set_visible(False)
+
+            # axis labels on bottom row and first column
+            if i == (n - 1):
+                ax.set_xlabel(column_names[j], rotation=0, fontsize=8)
             if j == 0:
-                ax.set_ylabel(column_names[i], rotation=90)
+                ax.set_ylabel(column_names[i], rotation=90, fontsize=8)
 
     for i in range(n):
         for j in range(n):
@@ -139,9 +251,13 @@ figures.set_rc_params(fontfamily="Arial", small=5, medium=6, big=7)
 
 inch_to_cm = 2.54
 figwidth = 17 / inch_to_cm
-fig = custom_pairplot(data, outcome_columns=pad_models_gm_icv, figsize=(figwidth, figwidth))
+fig = custom_pairplot(data, outcome_columns=pad_models_gm_icv, figsize=(figwidth, figwidth), partial=True)
 
 fig.savefig(results_dir / "correlation_plot.png", dpi=300)
 fig.savefig(results_dir / "correlation_plot.pdf", dpi=300)
 
-# %%
+# %% generate three different group results including CI for data['diagnosis'] == {CN, MCI, AD}
+for diag in ["CN", "MCI", "AD"]:
+    data_diag = data[data["diagnosis"] == diag]
+    df_results_diag = compute_correlations(data_diag, pad_models_gm_icv)
+    df_results_diag.to_excel(results_dir / f"correlation_results_{diag}.xlsx")
