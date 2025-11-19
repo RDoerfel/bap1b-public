@@ -25,7 +25,6 @@ df_results = pd.DataFrame(index=pad_models_gm_icv, columns=pad_models_gm_icv)
 # %%
 df_cn = data[df["diagnosis"] == "CN"].copy()
 
-
 # %% compute pearson's r between "enigma", "pyment"
 col1 = "pad_enigma"
 col2 = "pad_brainage"
@@ -45,49 +44,61 @@ corr_enigma_brainage, pval_enigma_brainage = compute_pearsonr(df_cn, col1, col2)
 
 
 #  fit linear regression line between "enigma", "pyment"
-def fit_linear_regression(data, col1, col2, col1_new=10):
+def fit_linear_regression(data, col1, col2, col3, col1_new=10):
     X = data[col1]
     y = data[col2]
-    mu_x = X.mean()
-    mu_y = y.mean()
-    sd_x = X.std()
-    sd_y = y.std()
+    covariates = data[col3]
+    # mu_x = X.mean()
+    # mu_y = y.mean()
+    # sd_x = X.std()
+    # sd_y = y.std()
 
-    # center
-    X = X - mu_x
-    y = y - mu_y
+    # # center
+    # X = X - mu_x
+    # y = y - mu_y
 
-    # unit variance
-    X = X / sd_x
-    y = y / sd_y
+    # # unit variance
+    # X = X / sd_x
+    # y = y / sd_y
+
+    # dummyfy covariates
+    cov_dummies = pd.get_dummies(covariates, drop_first=True)
+    X = pd.concat([X, cov_dummies], axis=1)
+    X = sm.add_constant(X)
 
     model = sm.OLS(y, X).fit()
-    slope = model.params[col1]
+    beta = model.params[col1]
+
+    # pcc
+    df_resid = model.df_resid
+    se = model.bse[col1]
+    z = beta / se
+    pcc = z / _np.sqrt(df_resid) / _np.sqrt(1 + z**2 / df_resid)
 
     # prediction interval
-    X_new = _np.array([col1_new])
-    X_new = X_new - mu_x
-    X_new = X_new / sd_x
+    X_new = X.iloc[0].copy()
+    X_new[col1] = col1_new
+
     pred = model.get_prediction(X_new)
     pred_summary = pred.summary_frame(alpha=0.05)
-    pred_summary["mean"][0] = pred_summary["mean"][0] * sd_y + mu_y
-    pred_summary["obs_ci_lower"][0] = pred_summary["obs_ci_lower"][0] * sd_y + mu_y
-    pred_summary["obs_ci_upper"][0] = pred_summary["obs_ci_upper"][0] * sd_y + mu_y
+    # pred_summary["mean"][0] = pred_summary["mean"][0] * sd_y + mu_y
+    # pred_summary["obs_ci_lower"][0] = pred_summary["obs_ci_lower"][0] * sd_y + mu_y
+    # pred_summary["obs_ci_upper"][0] = pred_summary["obs_ci_upper"][0] * sd_y + mu_y
 
-    return slope, pred_summary
+    return pcc, pred_summary
 
 
-def get_pred_interval(data, col1, col2, col1_new=10):
-    slope, pred_summary = fit_linear_regression(data, col1, col2, col1_new)
-    print(f"Pearson's r between {col1} and {col2}: {slope} ")
+def get_pred_interval(data, col1, col2, col3, col1_new=10):
+    pcc, pred_summary = fit_linear_regression(data, col1, col2, col3, col1_new)
+    print(f"PCC between {col1} and {col2}: {pcc} ")
     print(f"95% prediction interval at {col1} x={col1_new} years:")
     print(
         f"prediction {pred_summary['mean'][0]:.2f} ({pred_summary['obs_ci_lower'][0]:.2f}, {pred_summary['obs_ci_upper'][0]:.2f})"
     )
 
 
-get_pred_interval(df_cn, col1="pad_enigma", col2="pad_brainage", col1_new=5)
-get_pred_interval(df_cn, col1="pad_enigma", col2="pad_pyment", col1_new=5)
+get_pred_interval(df, col1="pad_enigma", col2="pad_brainage", col3="diagnosis", col1_new=10)
+get_pred_interval(df, col1="pad_enigma", col2="pad_pyment", col3="diagnosis", col1_new=10)
 
 
 # %% manual
