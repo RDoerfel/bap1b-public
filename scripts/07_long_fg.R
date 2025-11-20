@@ -32,6 +32,17 @@ get_contrast <- function(time) {
     return(contrast)
 }
 
+get_adjusted_contrast <- function(time) {
+    n_times <- length(time)
+    weight <- (time - mean(time)) / sum((time - mean(time))^2) # (time is centered and scaled)
+    contrast <- rbind(
+                    c(weight, rep(0, n_times)),
+                    c(rep(0, n_times), weight),
+                    c(1, rep(0, n_times - 1), rep(0, n_times)),
+                    c(rep(0, n_times), c(1, rep(0, n_times - 1))))
+    return(contrast)
+}
+
 strategy_1 <- function(data_long) {
     slopes <- data_long %>%
         dplyr::group_by(subject_id) %>%
@@ -67,6 +78,33 @@ strategy_2 <- function(data_long, contrast) {
         sigma_vy <- sigma(unstructured_lmm, p = p)
         sigma_vb <- contrast %*% sigma_vy %*% t(contrast)
         cov2cor(sigma_vb)[1, 2]
+    })
+    # only keep coluns estimate, lower, upper, p.value
+    cor <- cor[, c("estimate", "lower", "upper", "p.value")]
+    return(cor)
+}
+
+# adjust for baseline effects
+strategy_2_adjusted <- function(data_longlong, contrast) {
+    strat2_mmrm <- mmrm::mmrm(value ~ variable + us(variable | subject_id), data = data_longlong)
+    sigma_mmrm <- VarCorr(strat2_mmrm)
+    # second, use the estimated residual variance-covariance matrix as initial values for the LMM
+    strat2_lmm_mmrm <- lmm(
+        value ~ variable,
+        repetition = ~ variable | subject_id,
+        structure = "UN",
+        data = data_longlong,
+        control = list(init = sigma_mmrm)
+    )
+
+    cor <- lava::estimate(strat2_lmm_mmrm, function(p){
+        sigma_xy <- sigma(strat2_lmm_mmrm, p = p)
+        sigma_bxby <- contrast %*% sigma_xy %*% t(contrast)
+        sigma_bxby_final <- sigma_bxby[1:2, 1:2] - # sigma_slope
+                            sigma_bxby[1:2, 3:4] %*%  # sigma_cross
+                            solve(sigma_bxby[3:4, 3:4]) %*% # sigma_baseline^(-1)
+                            sigma_bxby[3:4, 1:2] # sigma_cross^T
+        cov2cor(sigma_bxby_final)[1, 2]
     })
     # only keep coluns estimate, lower, upper, p.value
     cor <- cor[, c("estimate", "lower", "upper", "p.value")]
@@ -270,6 +308,11 @@ for (diag in c("CN", "MCI", "AD")) {
                 strat2$target <- target
                 strat2$strategy <- "2"
                 strat2$model <- dvs[i]
+                strat2_adjusted <- data.table(estimate = 1, lower = 1, upper = 1, p.value = 0)
+                strat2_adjusted$diagnosis <- diag
+                strat2_adjusted$target <- target
+                strat2_adjusted$strategy <- "2_adjusted"
+                strat2_adjusted$model <- dvs[i]
                 strat3 <- data.table(estimate = 1, lower = 1, upper = 1, p.value = 0)
                 strat3$diagnosis <- diag
                 strat3$target <- target
@@ -281,6 +324,7 @@ for (diag in c("CN", "MCI", "AD")) {
                 # compute contrast for each target
                 time <- get_times(data_model$session_id)
                 contrast <- get_contrast(time)
+                contrast_adjusted <- get_adjusted_contrast(time)
 
                 # subset to only actually used data
                 data_model_target <- select_outcome_vatriable(data_model, target)
@@ -299,6 +343,10 @@ for (diag in c("CN", "MCI", "AD")) {
                 strat2 <- strategy_2_mmrm_lmm(data_long_target, contrast)
                 print(strat2)
 
+                ## Strategy 2 adjusted for baseline effects
+                strat2_adjusted <- strategy_2_adjusted(data_long_target, contrast_adjusted)
+                print(strat2_adjusted)
+
                 ## Strategy 3: estimate covariance matrix using cov
                 strat3 <- strategy_3(data_wide_target[, 2 : (1 + dim(contrast)[2])], contrast)
                 print(strat3)
@@ -312,11 +360,15 @@ for (diag in c("CN", "MCI", "AD")) {
                 strat2$target <- target
                 strat2$strategy <- "2"
                 strat2$model <- dvs[i]
+                strat2_adjusted$diagnosis <- diag
+                strat2_adjusted$target <- target
+                strat2_adjusted$strategy <- "2_adjusted"
+                strat2_adjusted$model <- dvs[i]
                 strat3$diagnosis <- diag
                 strat3$target <- target
                 strat3$strategy <- "3"
                 strat3$model <- dvs[i]
-                strategies_results_target <- list(strat1, strat2, strat3)
+                strategies_results_target <- list(strat1, strat2, strat2_adjusted, strat3)
                 results_target[[length(results_target) + 1]] <- rbindlist(strategies_results_target)
             }
         }
