@@ -19,8 +19,6 @@ df_data = pd.read_excel(data_dir / "data_long_c.xlsx")
 
 # replce CN with NC
 df_data["diagnosis"] = df_data["diagnosis"].replace({"CN": "NC"})
-df_preds["diagnosis"] = df_preds["diagnosis"].replace({"CN": "NC"})
-df_results["diagnosis"] = df_results["diagnosis"].replace({"CN": "NC"})
 
 models = ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "gm_icv"]
 
@@ -98,6 +96,7 @@ for i, model in enumerate(models):
 fig.set_style(spinewidth=0.9)
 fig.save("figure_long-c.png", results_dir)
 fig.save("figure_long-c.pdf", results_dir)
+fig.save("figure_long-c.tiff", results_dir)
 
 
 # %% ROC curve
@@ -117,5 +116,6 @@ ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 fig.save("figure_long-c_roc.png", results_dir)
 fig.save("figure_long-c_roc.pdf", results_dir)
+fig.save("figure_long-c_roc.tiff", results_dir)
 
 # %%

@@ -106,7 +106,8 @@ for m, model in enumerate(models):
 
 fig.set_style(spinewidth=0.9)
 fig.save("figure_cs-a_suppl.pdf", results_dir)
-fig.save("figure_cs-a_suppl", results_dir)
+fig.save("figure_cs-a_suppl.png", results_dir)
+fig.save("figure_cs-a_suppl.tiff", results_dir)
 
 # %% Main Figure
 figures.set_rc_params(fontfamily="Arial", small=5, medium=6, big=7)
@@ -147,5 +148,6 @@ for m, model in enumerate(models):
 fig.set_style(spinewidth=0.9)
 fig.save("figure_cs-a.pdf", results_dir)
 fig.save("figure_cs-a.png", results_dir)
+fig.save("figure_cs-a.tiff", results_dir)
 
 # %%

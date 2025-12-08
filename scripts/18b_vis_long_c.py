@@ -20,8 +20,6 @@ models = ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn"
 
 # replce CN with NC
 df_data["diagnosis"] = df_data["diagnosis"].replace({"CN": "NC"})
-df_preds["diagnosis"] = df_preds["diagnosis"].replace({"CN": "NC"})
-df_results["diagnosis"] = df_results["diagnosis"].replace({"CN": "NC"})
 
 # %% plot probability usin logisticc regression. df_results has a column model, intercept and coef.
 # I want to plot the probability of the model for the range of -40 to 20.
@@ -97,6 +95,7 @@ for i, model in enumerate(models):
 fig.set_style(spinewidth=0.9)
 fig.save("figure_long-c_mci.png", results_dir)
 fig.save("figure_long-c_mci.pdf", results_dir)
+fig.save("figure_long-c_mci.tiff", results_dir)
 
 
 # %% ROC curve
@@ -116,5 +115,6 @@ ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 fig.save("figure_long-c_roc_mci.png", results_dir)
 fig.save("figure_long-c_roc_mci.pdf", results_dir)
+fig.save("figure_long-c_roc_mci.tiff", results_dir)
 
 # %%

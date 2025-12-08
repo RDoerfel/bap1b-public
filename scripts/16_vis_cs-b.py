@@ -125,6 +125,7 @@ for d, diag in enumerate(["NC", "MCI", "AD"]):
 fig.set_style(spinewidth=0.9)
 fig.save("figure_cs-b_suppl.png", path=results_dir)
 fig.save("figure_cs-b_suppl.pdf", path=results_dir)
+fig.save("figure_cs-b_suppl.tiff", path=results_dir)
 
 # %% Main Article
 figures.set_rc_params(fontfamily="Arial", small=5, medium=6, big=7)
@@ -176,4 +177,6 @@ for m, model in enumerate(models):
 fig.set_style(spinewidth=0.9)
 fig.save("figure_cs-b.pdf", results_dir)
 fig.save("figure_cs-b.png", results_dir)
+fig.save("figure_cs-b.tiff", results_dir)
+
 # %%
