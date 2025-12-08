@@ -12,9 +12,15 @@ results_dir = Path(__file__).resolve().parents[1] / "results"
 
 # %% ### load data
 df_results = pd.read_excel(results_dir / "long_c_results.xlsx")
+
 df_preds = pd.read_excel(results_dir / "long_c_preds.xlsx")
 
 df_data = pd.read_excel(data_dir / "data_long_c.xlsx")
+
+# replce CN with NC
+df_data["diagnosis"] = df_data["diagnosis"].replace({"CN": "NC"})
+df_preds["diagnosis"] = df_preds["diagnosis"].replace({"CN": "NC"})
+df_results["diagnosis"] = df_results["diagnosis"].replace({"CN": "NC"})
 
 models = ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "gm_icv"]
 
@@ -32,8 +38,8 @@ ki_palette_dark = sns.color_palette(ki_colors_dark)
 ki_palette_normal = sns.color_palette(ki_colors_normal)
 ki_palette_light = sns.color_palette(ki_colors_light)
 
-color_dict_lines = {"CN": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
-color_dict_shade = {"CN": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
+color_dict_lines = {"NC": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
+color_dict_shade = {"NC": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
 
 scatter_color = ki_palette_dark[3]  # Black
 
@@ -69,10 +75,10 @@ for i, model in enumerate(models):
     y_cinf_upper = df_preds[data_col + "_ci_upper"]
 
     # plot expit
-    ax.plot(x, y, color=color_dict_lines["CN"])
+    ax.plot(x, y, color=color_dict_lines["NC"])
 
     # plot confidence intervall
-    ax.fill_between(x, y_cinf_lower, y_cinf_upper, color=color_dict_shade["CN"], alpha=0.9)
+    ax.fill_between(x, y_cinf_lower, y_cinf_upper, color=color_dict_shade["NC"], alpha=0.9)
 
     # plot data centered data
     sns.rugplot(df_data[data_col], ax=ax, color="black", height=0.05, lw=0.6, alpha=0.1)

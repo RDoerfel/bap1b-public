@@ -18,6 +18,11 @@ df_data = pd.read_excel(data_dir / "data_long_c_mci.xlsx")
 
 models = ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "gm_icv"]
 
+# replce CN with NC
+df_data["diagnosis"] = df_data["diagnosis"].replace({"CN": "NC"})
+df_preds["diagnosis"] = df_preds["diagnosis"].replace({"CN": "NC"})
+df_results["diagnosis"] = df_results["diagnosis"].replace({"CN": "NC"})
+
 # %% plot probability usin logisticc regression. df_results has a column model, intercept and coef.
 # I want to plot the probability of the model for the range of -40 to 20.
 
@@ -32,8 +37,8 @@ ki_palette_dark = sns.color_palette(ki_colors_dark)
 ki_palette_normal = sns.color_palette(ki_colors_normal)
 ki_palette_light = sns.color_palette(ki_colors_light)
 
-color_dict_lines = {"CN": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
-color_dict_shade = {"CN": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
+color_dict_lines = {"NC": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
+color_dict_shade = {"NC": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
 
 scatter_color = ki_palette_dark[3]  # Black
 

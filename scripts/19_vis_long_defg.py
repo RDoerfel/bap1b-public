@@ -10,16 +10,19 @@ data_dir = Path(__file__).resolve().parents[1] / "data"
 results_dir = Path(__file__).resolve().parents[1] / "results"
 
 # %% Load data
-for analysis in ["de", "fg"]:
+for analysis in ["fg"]:
     df_results = pd.read_excel(results_dir / f"long_{analysis}_results.xlsx")
+    df_results["diagnosis"] = df_results["diagnosis"].replace({"CN": "NC"})
 
     # subset for strategy 2
-    df_results = df_results[df_results["strategy"] == 2]
-    # df_results = df_results[df_results["diagnosis"] == "CN"]
+    df_results["strategy"] = df_results["strategy"].apply(lambda x: str(x) if pd.notna(x) else "")
+    df_results = df_results[df_results["strategy"] == "2_adjusted"]
+    # df_results = df_results[df_results["diagnosis"] == "NC"]
 
-    # %% settings for plots
+    # settings for plots
     models = ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "gm_icv"]
     model_labels = ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "Gray Matter"]
+
     # colors
     # Farben festlegen
     ki_color_names = ["Plum", "Orange", "Blue", "Black", "Green", "Yellow"]
@@ -32,15 +35,15 @@ for analysis in ["de", "fg"]:
     ki_palette_normal = sns.color_palette(ki_colors_normal)
     ki_palette_light = sns.color_palette(ki_colors_light)
 
-    color_dict_lines = {"CN": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
-    color_dict_shade = {"CN": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
+    color_dict_lines = {"NC": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
+    color_dict_shade = {"NC": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
 
     scatter_color = ki_palette_dark[3]  # Black
 
     # Abbildung und Achsen erstellen
     figures.set_rc_params(fontfamily="Arial", small=5, medium=6, big=7)
 
-    # %% plot
+    # plot
     max_width = 8.9
     width = max_width - 1
     height = 5
@@ -49,15 +52,18 @@ for analysis in ["de", "fg"]:
     )
     index = len(models) * 4
     revert_index = range(index)[::-1]
-    for d, diag in enumerate(["CN", "MCI", "AD"]):
+    for d, diag in enumerate(["NC", "MCI", "AD"]):
         targets = ["ADNI_MEM", "gm_icv"]
         for i, target in enumerate(targets):
             df_target = df_results[df_results["target"] == target]
             df = df_target[df_target["diagnosis"] == diag]
             ax = axes[i]
+            indices = revert_index[d::4]
+            if target == "gm_icv":
+                indices = indices[:-1]
             ax.errorbar(
                 df["estimate"],
-                revert_index[d::4],
+                indices,
                 xerr=[df["estimate"] - df["lower"], df["upper"] - df["estimate"]],
                 fmt="o",
                 color=color_dict_lines[diag],
@@ -94,26 +100,28 @@ for analysis in ["de", "fg"]:
     fig.set_style(spinewidth=0.8)
 
     # save
-    fig.save(f"figure_long-{analysis}.png", results_dir)
-    fig.save(f"figure_long-{analysis}.pdf", results_dir)
+    fig.save(f"figure_long-{analysis}_adjusted.png", results_dir)
+    fig.save(f"figure_long-{analysis}_adjusted.pdf", results_dir)
 
 
-# Supplement figure (Hippocampal Volume)
+# %% Supplement figure (Hippocampal Volume)
 target = "hippocampus_icv"
 max_width = 8.9
 width = max_width - 1
 height = 5
 
-for analysis in ["de", "fg"]:
+for analysis in ["fg"]:
     fig, ax = figures.get_figures(
         rows=1, cols=1, unit="cm", figwidth=width / 1.5, figheight=height, sharex=True, sharey=True
     )
 
     df_results = pd.read_excel(results_dir / f"long_{analysis}_results.xlsx")
-
+    df_results["diagnosis"] = df_results["diagnosis"].replace({"CN": "NC"})
+    # ensure integer-like strategy values become plain strings (handles NaN)
+    df_results["strategy"] = df_results["strategy"].apply(lambda x: str(x) if pd.notna(x) else "")
     # subset for strategy 2
-    df_results = df_results[df_results["strategy"] == 2]
-    # df_results = df_results[df_results["diagnosis"] == "CN"]
+    df_results = df_results[df_results["strategy"] == "2_adjusted"]
+    # df_results = df_results[df_results["diagnosis"] == "NC"]
 
     # settings for plots
     models = ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "gm_icv"]
@@ -131,8 +139,8 @@ for analysis in ["de", "fg"]:
     ki_palette_normal = sns.color_palette(ki_colors_normal)
     ki_palette_light = sns.color_palette(ki_colors_light)
 
-    color_dict_lines = {"CN": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
-    color_dict_shade = {"CN": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
+    color_dict_lines = {"NC": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
+    color_dict_shade = {"NC": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
 
     scatter_color = ki_palette_dark[3]  # Black
 
@@ -141,7 +149,7 @@ for analysis in ["de", "fg"]:
 
     index = len(models) * 4
     revert_index = range(index)[::-1]
-    for d, diag in enumerate(["CN", "MCI", "AD"]):
+    for d, diag in enumerate(["NC", "MCI", "AD"]):
         df_target = df_results[df_results["target"] == target]
         df = df_target[df_target["diagnosis"] == diag]
         ax.errorbar(
@@ -181,5 +189,7 @@ for analysis in ["de", "fg"]:
     fig.set_style(spinewidth=0.8)
 
     # save
-    fig.save(f"figure_long-{analysis}_suppl.png", results_dir)
-    fig.save(f"figure_long-{analysis}_suppl.pdf", results_dir)
+    fig.save(f"figure_long-{analysis}_adjusted_suppl.png", results_dir)
+    fig.save(f"figure_long-{analysis}_adjusted_suppl.pdf", results_dir)
+
+# %%

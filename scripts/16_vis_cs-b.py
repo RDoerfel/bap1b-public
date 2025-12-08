@@ -14,6 +14,9 @@ results_dir = Path(__file__).resolve().parents[1] / "results"
 df = pd.read_excel(data_dir / "cs_baseline.xlsx")
 df_predictions = pd.read_excel(results_dir / "cs_b_predictions.xlsx")
 
+# replace CN in diagnosis with NC
+df["diagnosis"] = df["diagnosis"].replace({"CN": "NC"})
+df_predictions["diagnosis"] = df_predictions["diagnosis"].replace({"CN": "NC"})
 # %%
 models = ["brainageR", "DeepBrainNet", "brainage", "enigma", "pyment", "mccqrnn", "gm_icv"]
 
@@ -28,8 +31,8 @@ ki_palette_dark = sns.color_palette(ki_colors_dark)
 ki_palette_normal = sns.color_palette(ki_colors_normal)
 ki_palette_light = sns.color_palette(ki_colors_light)
 
-color_dict_lines = {"CN": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
-color_dict_shade = {"CN": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
+color_dict_lines = {"NC": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
+color_dict_shade = {"NC": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
 
 scatter_color = ki_palette_dark[3]  # Black
 
@@ -41,7 +44,7 @@ height = 12
 
 ### Supplement Figure
 fig, axes = figures.get_figures(rows=3, cols=7, unit="cm", figwidth=width, figheight=height, sharex=False, sharey=True)
-for d, diag in enumerate(["CN", "MCI", "AD"]):
+for d, diag in enumerate(["NC", "MCI", "AD"]):
     for m, model in enumerate(models):
         ax = axes[d, m]
         ylim = (-3, 3)
@@ -83,7 +86,7 @@ for d, diag in enumerate(["CN", "MCI", "AD"]):
                 xticks=xtiks,
                 xlable=x_lable,
                 yticks=yticks,
-                ylable="CN\nADNI-Mem",
+                ylable="NC\nADNI-Mem",
                 title=model,
             )
         elif (m == 0) & (d == 1):
@@ -148,8 +151,8 @@ for m, model in enumerate(models):
 
     df_model = df[["subject_id", "diagnosis", y_col, x_col]]
 
-    df_diagnosis = df_model[df_model["diagnosis"] == "CN"]
-    df_pred_diag = df_predictions[df_predictions["diagnosis"] == "CN"]
+    df_diagnosis = df_model[df_model["diagnosis"] == "NC"]
+    df_pred_diag = df_predictions[df_predictions["diagnosis"] == "NC"]
 
     # regression line with ci
     x_regression = np.linspace(min(df_diagnosis[x_col]), max(df_diagnosis[x_col]), 100)
@@ -158,8 +161,8 @@ for m, model in enumerate(models):
     ci_upr = df_pred_diag[x_col + "_upr"]
 
     # plot regression line (predictions) + confidence intervals
-    ax.plot(x_regression, y_regression, color=color_dict_lines["CN"], lw=1)
-    ax.fill_between(x_regression, ci_lwr, ci_upr, color=color_dict_shade["CN"], alpha=0.9)
+    ax.plot(x_regression, y_regression, color=color_dict_lines["NC"], lw=1)
+    ax.fill_between(x_regression, ci_lwr, ci_upr, color=color_dict_shade["NC"], alpha=0.9)
     # scatter plot
     sns.scatterplot(x=x_col, y=y_col, data=df_diagnosis, ax=ax, color=scatter_color, legend=False, s=10, alpha=0.3)
     if m == 0:

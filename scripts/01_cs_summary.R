@@ -7,7 +7,7 @@ library(dplyr)
 library(tidyr)
 
 # Load excel file
-file_path <- here::here("data", "megamastersheet_simulated.xlsx")
+file_path <- here::here("data", "megamastersheet.xlsx")
 data <- readxl::read_excel(file_path)
 print(dim(data))
 # [1] 10802    36

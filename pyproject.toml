@@ -23,6 +23,7 @@ clinica = "0.7.4"
 pytest = "^8.3.2"
 click = "^8.1.7"
 mdutils = "^1.6.0"
+pingouin = "^0.5.5"
 
 
 [build-system]

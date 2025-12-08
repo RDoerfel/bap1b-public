@@ -12,6 +12,9 @@ results_dir = Path(__file__).resolve().parents[1] / "results"
 # %% ### load data
 df = pd.read_excel(data_dir / "cs_baseline.xlsx")
 
+# replace CN in diagnosis with NC
+df["diagnosis"] = df["diagnosis"].replace({"CN": "NC"})
+
 # %%
 models = [
     "brainageR",
@@ -36,8 +39,8 @@ ki_palette_dark = sns.color_palette(ki_colors_dark)
 ki_palette_normal = sns.color_palette(ki_colors_normal)
 ki_palette_light = sns.color_palette(ki_colors_light)
 
-color_dict_lines = {"CN": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
-color_dict_shade = {"CN": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
+color_dict_lines = {"NC": ki_palette_normal[4], "MCI": ki_palette_normal[5], "AD": ki_palette_normal[1]}
+color_dict_shade = {"NC": ki_palette_light[4], "MCI": ki_palette_light[5], "AD": ki_palette_light[1]}
 
 scatter_color = ki_palette_dark[3]  # Black
 
@@ -64,7 +67,7 @@ for m, model in enumerate(models):
     df_subset = df[["subject_id", "diagnosis", "chron_age", y_col]]
 
     # Scatterplots mit Regressionslinien
-    for i, diagnosis in enumerate(["CN", "MCI", "AD"]):
+    for i, diagnosis in enumerate(["NC", "MCI", "AD"]):
         ax = axes[m, i]
         subset = df_subset[df_subset["diagnosis"] == diagnosis]
         ax = figures.scatter_plot(

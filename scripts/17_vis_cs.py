@@ -11,13 +11,14 @@ results_dir = Path(__file__).resolve().parents[1] / "results"
 
 # %% ### load data
 df = pd.read_excel(data_dir / "cs_baseline.xlsx")
+df["diagnosis"] = df["diagnosis"].replace({"CN": "NC"})
 
 # %% plot ADNI_MEM vs age, ADNI_mem vs educaion_level
 
 # Farben festlegen
 colors = sns.color_palette("Dark2", 3)
 colors_hue = sns.color_palette("Set2", 3)
-color_dict = {"CN": colors[0], "MCI": colors[1], "AD": colors[2]}
+color_dict = {"NC": colors[0], "MCI": colors[1], "AD": colors[2]}
 scatter_color = "black"  # sns.color_palette("Set2", 8)[7]
 
 # Abbildung und Achsen erstellen
@@ -31,7 +32,7 @@ ax = axes[0]
 sns.scatterplot(
     data=df, x="chron_age", y="ADNI_MEM", hue="diagnosis", ax=ax, legend=False, palette=colors_hue, size=0.5
 )
-for diagnosis in ["CN", "MCI", "AD"]:
+for diagnosis in ["NC", "MCI", "AD"]:
     df_diagnosis = df[df["diagnosis"] == diagnosis]
     sns.regplot(data=df_diagnosis, x="chron_age", y="ADNI_MEM", ax=ax, scatter=False, color=color_dict[diagnosis])
 
@@ -43,7 +44,7 @@ ax = axes[1]
 sns.scatterplot(
     data=df, x="education_level", y="ADNI_MEM", hue="diagnosis", ax=ax, legend=False, palette=colors_hue, size=0.5
 )
-for diagnosis in ["CN", "MCI", "AD"]:
+for diagnosis in ["NC", "MCI", "AD"]:
     df_diagnosis = df[df["diagnosis"] == diagnosis]
     sns.regplot(data=df_diagnosis, x="education_level", y="ADNI_MEM", ax=ax, scatter=False, color=color_dict[diagnosis])
 

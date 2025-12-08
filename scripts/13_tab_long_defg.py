@@ -6,7 +6,7 @@ import pandas as pd
 results_dir = Path(__file__).resolve().parents[1] / "results"
 
 # %% data
-for analysis in ["de", "fg"]:
+for analysis in ["fg"]:
 
     df = pd.read_excel(results_dir / f"long_{analysis}_results.xlsx")
 
@@ -34,7 +34,7 @@ for analysis in ["de", "fg"]:
 
     # %% select
     # only keep straggy = 2
-    df = df[df["strategy"] == 2]
+    df = df[df["strategy"] == "2_adjusted"]
     # df = df[df["diagnosis"] == "CN"]
 
     # %% make table wide based
@@ -63,6 +63,6 @@ for analysis in ["de", "fg"]:
     df = df.reindex(models, level=0)
 
     # %% save
-    df.to_excel(results_dir / f"long_{analysis}_results_formatted.xlsx", index=True)
+    df.to_excel(results_dir / f"long_{analysis}_results_adjusted_formatted.xlsx", index=True)
 
 # %%
